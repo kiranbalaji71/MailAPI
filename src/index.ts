@@ -13,7 +13,7 @@ app.use(express.json());
 const createEmailTemplate = (name: string, email: string, message: string) => {
   return `
   <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-    <h2 style="color: #0a74da;">New Message from Portfolio Website</h2>
+    <h2 style="color: #9c3232ff;">New Message from Portfolio Website</h2>
     <p><strong>Name:</strong> ${name}</p>
     <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
     <p><strong>Message:</strong></p>
@@ -50,10 +50,11 @@ app.post("/send-email", async (req, res) => {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      tls: { rejectUnauthorized: false },
     });
 
     await transporter.sendMail({
-      from: `"Portfolio Contact Form" <${process.env.SMTP_USER}>`, // your verified email
+      from: `"Portfolio Contact Form" <${email}>`, // your verified email
       to: process.env.MY_EMAIL, // your inbox
       replyTo: email, // visitor's email
       subject: "Contact From Portfolio Website",
