@@ -7,13 +7,7 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-app.use(
-  cors({
-    origin: "*", // ✅ allow all origins
-    methods: ["POST", "GET"], // allow required methods
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+app.use(cors());
 app.use(express.json());
 
 const createEmailTemplate = (name: string, email: string, message: string) => {
@@ -29,6 +23,16 @@ const createEmailTemplate = (name: string, email: string, message: string) => {
   </div>
   `;
 };
+
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+  next();
+});
 
 app.post("/send-email", async (req, res) => {
   const { name, email, message } = req.body;
