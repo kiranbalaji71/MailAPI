@@ -54,9 +54,9 @@ app.post("/send-email", async (req, res) => {
     });
 
     await transporter.sendMail({
-      from: `"Portfolio Contact Form" <${email}>`, // your verified email
-      to: process.env.MY_EMAIL, // your inbox
-      replyTo: email, // visitor's email
+      from: `"Portfolio Contact Form" <${process.env.SMTP_USER}>`,
+      to: process.env.MY_EMAIL,
+      replyTo: email,
       subject: "Contact From Portfolio Website",
       text: message,
       html: createEmailTemplate(name, email, message),
