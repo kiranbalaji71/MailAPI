@@ -34,6 +34,15 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get("/", (_, res) => {
+  try {
+    res.status(200).json({ status: "API is live ✅" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: "error", message: "API is Failed" });
+  }
+});
+
 app.post("/send-email", async (req, res) => {
   const { name, email, message } = req.body;
 
@@ -43,8 +52,9 @@ app.post("/send-email", async (req, res) => {
 
   try {
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT),
+      service: "gmail",
+      // host: process.env.SMTP_HOST,
+      // port: Number(process.env.SMTP_PORT),
       secure: true,
       auth: {
         user: process.env.SMTP_USER,
