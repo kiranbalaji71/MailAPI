@@ -1,15 +1,17 @@
 import express from "express";
-import sgMail from "@sendgrid/mail";
 import dotenv from "dotenv";
 import cors from "cors";
+import { Resend } from "resend";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
 app.use(cors());
 app.use(express.json());
-sgMail.setApiKey(process.env.SENDGRID_API_KEY || "");
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const createEmailTemplate = (name: string, email: string, message: string) => {
   return `
@@ -36,31 +38,29 @@ app.use((req, res, next) => {
 });
 
 app.get("/", (_, res) => {
-  try {
-    res.status(200).json({ status: "API is live ✅" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ status: "error", message: "API is Failed" });
-  }
+  res.json({ status: "API is live ✅" });
 });
 
 app.post("/send-email", async (req, res) => {
   const { name, email, message } = req.body;
 
-  const msg = {
-    to: process.env.MY_EMAIL || "",
-    from: process.env.MY_EMAIL || "",
-    replyTo: email,
-    subject: "Contact Form Portfolio",
-    html: `<p><strong>${name}</strong></p><p>${message}</p>`,
-  };
+  if (!name || !email || !message) {
+    return res.status(400).json({ message: "All fields are required." });
+  }
 
   try {
-    await sgMail.send(msg);
-    res.json({ status: "success", message: "Email sent ✔" });
+    await resend.emails.send({
+      from: `Portfolio Contact Resend <onboarding@resend.dev>`,
+      to: process.env.MY_EMAIL || "",
+      replyTo: email,
+      subject: "New Message From Portfolio Website",
+      html: `${createEmailTemplate(name, email, message)}`,
+    });
+
+    res.json({ status: "success", message: "Email sent successfully" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ status: "error", message: "Email send failed" });
+    res.status(500).json({ status: "error", message: "Failed to send email" });
   }
 });
 
