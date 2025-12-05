@@ -1,5 +1,5 @@
 import express from "express";
-import nodemailer from "nodemailer";
+import sgMail from "@sendgrid/mail";
 import dotenv from "dotenv";
 import cors from "cors";
 
@@ -9,6 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
+sgMail.setApiKey(process.env.SENDGRID_API_KEY || "");
 
 const createEmailTemplate = (name: string, email: string, message: string) => {
   return `
@@ -46,39 +47,20 @@ app.get("/", (_, res) => {
 app.post("/send-email", async (req, res) => {
   const { name, email, message } = req.body;
 
-  if (!name || !email || !message) {
-    return res.status(400).json({ message: "All fields are required." });
-  }
+  const msg = {
+    to: process.env.MY_EMAIL || "",
+    from: process.env.MY_EMAIL || "",
+    replyTo: email,
+    subject: "Contact Form Portfolio",
+    html: `<p><strong>${name}</strong></p><p>${message}</p>`,
+  };
 
   try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587,
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS, // ✅ must be Google App Password
-      },
-      tls: {
-        rejectUnauthorized: false,
-      },
-    });
-
-    await transporter.sendMail({
-      from: `"Portfolio Contact Form" <${process.env.SMTP_USER}>`,
-      to: process.env.MY_EMAIL,
-      replyTo: email,
-      subject: "Contact From Portfolio Website",
-      text: message,
-      html: createEmailTemplate(name, email, message),
-    });
-
-    res
-      .status(200)
-      .json({ status: "success", message: "Email sent successfully" });
+    await sgMail.send(msg);
+    res.json({ status: "success", message: "Email sent ✔" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ status: "error", message: "Failed to send email" });
+    res.status(500).json({ status: "error", message: "Email send failed" });
   }
 });
 
